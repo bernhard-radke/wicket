@@ -1195,7 +1195,9 @@ public abstract class Component
 		if (getFlag(FLAG_INHERITABLE_MODEL))
 		{
 			setModelImpl(null);
-			setFlag(FLAG_INHERITABLE_MODEL, false);
+			// reset model inheritable flag as we need this to rematerialize the model-tree
+			// correctly the next request
+			setFlag(FLAG_INHERITABLE_MODEL, true);
 		}
 
 		clearEnabledInHierarchyCache();
@@ -3002,6 +3004,18 @@ public abstract class Component
 		return null;
 	}
 
+	IModel<?> getModelImplEager()
+	{
+		IModel<?> result = getModelImpl();
+
+		if (result == null && getFlag(FLAG_INHERITABLE_MODEL))
+		{
+			result = getDefaultModel();
+		}
+
+		return result;
+	}
+
 	/**
 	 * 
 	 * @param model
@@ -3764,7 +3778,9 @@ public abstract class Component
 			// Don't call the getModel() that could initialize many inbetween
 			// completely useless models.
 			// IModel model = current.getModel();
-			IModel<?> model = current.getModelImpl();
+
+			// eager initialize inherited models
+			IModel<?> model = current.getModelImplEager();
 
 			if (model instanceof IWrapModel && !(model instanceof IComponentInheritedModel))
 			{
